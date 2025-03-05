@@ -1,0 +1,84 @@
+<?php
+// ตั้งค่าวันที่เป็นปัจจุบัน
+$date = date('Y-m-d');
+$page = 1;
+$pageSize = 20;
+$allOrders = [];
+
+// ฟังก์ชันดึงข้อมูลจาก API
+function fetchOrders($date, $page, $pageSize) {
+    $api_url = "http://the-best-pos.com/api/v1/batch-sales?date=$date&pageSize=$pageSize&page=$page";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $api_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    return json_decode($response, true);
+}
+
+// วนลูปดึงข้อมูลจากทุกหน้า
+do {
+    $data = fetchOrders($date, $page, $pageSize);
+
+    if (!$data || !isset($data['data'])) {
+        die("ไม่สามารถดึงข้อมูลจาก API ได้ หรือไม่มีข้อมูล");
+    }
+
+    $allOrders = array_merge($allOrders, $data['data']);
+    $totalPages = $data['totalPage'];
+
+    $page++;
+} while ($page <= $totalPages);
+
+?>
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายการคำสั่งซื้อทั้งหมด</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+<h2>รายการคำสั่งซื้อทั้งหมดของวันที่ <?= htmlspecialchars($date) ?></h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>หมายเลขคำสั่งซื้อ</th>
+            <th>เวลาที่สั่งซื้อ</th>
+            <th>อุปกรณ์</th>
+            <th>พนักงานขาย</th>
+            <th>POS พนักงาน</th>
+            <th>ยอดรวม</th>
+            <th>ส่วนลด</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($allOrders as $order) : ?>
+            <tr>
+                <td><?= htmlspecialchars($order['orderId']) ?></td>
+                <td><?= htmlspecialchars($order['timestamp']) ?></td>
+                <td><?= htmlspecialchars($order['deviceId']) ?></td>
+                <td><?= htmlspecialchars($order['salesPerson']) ?></td>
+                <td><?= htmlspecialchars($order['posPerson']) ?></td>
+                <td><?= number_format($order['total'], 2) ?></td>
+                <td><?= number_format($order['discount'], 2) ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+
+</body>
+</html>

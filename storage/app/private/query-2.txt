@@ -1,0 +1,25 @@
+SELECT 
+    CASE 
+        WHEN TIMESTAMPDIFF(YEAR, o.customer_birthdate, CURDATE()) BETWEEN 0 AND 19 THEN '0-19'
+        WHEN TIMESTAMPDIFF(YEAR, o.customer_birthdate, CURDATE()) BETWEEN 20 AND 29 THEN '20-29'
+        WHEN TIMESTAMPDIFF(YEAR, o.customer_birthdate, CURDATE()) BETWEEN 30 AND 39 THEN '30-39'
+        WHEN TIMESTAMPDIFF(YEAR, o.customer_birthdate, CURDATE()) BETWEEN 40 AND 49 THEN '40-49'
+        WHEN TIMESTAMPDIFF(YEAR, o.customer_birthdate, CURDATE()) BETWEEN 50 AND 59 THEN '50-59'
+        WHEN TIMESTAMPDIFF(YEAR, o.customer_birthdate, CURDATE()) >= 60 THEN '60 ปีขึ้นไป'
+        ELSE 'ไม่ระบุอายุ'
+    END AS age_group,
+    
+    CASE 
+        WHEN o.total BETWEEN 0 AND 29999 THEN '0 - 29,999'
+        WHEN o.total BETWEEN 30000 AND 59999 THEN '30,000 - 59,999'
+        WHEN o.total BETWEEN 60000 AND 99999 THEN '60,000 - 99,999'
+        WHEN o.total BETWEEN 100000 AND 199999 THEN '100,000 - 199,999'
+        ELSE '200,000 ขึ้นไป'
+    END AS sales_range,
+    
+    COUNT(o.id) AS total_orders,
+    SUM(o.total) AS total_sales
+    
+FROM orders o
+GROUP BY age_group, sales_range
+ORDER BY age_group, sales_range;

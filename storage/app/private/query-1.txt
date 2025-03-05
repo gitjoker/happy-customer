@@ -1,0 +1,14 @@
+SELECT 
+    DATE_FORMAT(o.created_at, '%Y-%m') AS sales_month,  -- เดือนที่ขาย (YYYY-MM)
+    s.name AS store_name,  -- ชื่อร้านค้า
+    se.name AS seller_name,  -- ชื่อพนักงานขาย
+    i.jewelry_type,  -- ประเภทสินค้า
+    COUNT(i.id) AS total_items,  -- จำนวนสินค้าที่ขาย
+    SUM(i.subtotal) AS total_sales  -- ยอดขายรวม
+FROM orders o
+JOIN stores s ON o.store_id = s.id
+JOIN sellers se ON o.seller_id = se.id
+JOIN items i ON o.id = i.order_id
+WHERE o.created_at >= DATE_SUB(CURRENT_DATE, INTERVAL 12 MONTH)  -- ดึงข้อมูล 12 เดือนล่าสุด
+GROUP BY sales_month, s.name, se.name, i.jewelry_type
+ORDER BY sales_month DESC, store_name, seller_name, jewelry_type;
